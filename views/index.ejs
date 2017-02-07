@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Site de sondage</title>
+	<% include header.html %>
+</head>
+<body>
+	<section class="container">
+		<h1> Bienvenue sur le site de sondage</h1>
+		<a href="/user">
+			<section class="acces" id="accesEtu">
+				<p>Accès étudiants</p>
+				<div class="middle">
+	    			<div class="text">Connexion</div>
+	  			</div>
+			</section>
+		</a>
+		<a href="/admin">
+			<section class="acces" id="accesProf">
+				<p>Accès professeur</p>
+			</section>
+		</a>
+	</section>
+
+	<script>
+		console.log("connecting to sockets");
+		var socket = io.connect('http://localhost:8080');
+		socket.on('info', function(message) {
+			console.log("message : "+message.text);
+		});
+	</script>
+</body>
+</html>

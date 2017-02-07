@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>User</title>
+	<% include header.html %>
+</head>
+<body>
+	<form action="/question">
+		<label for="username">Nom : </label>
+		<input type="text" id="login" name="username" value="">
+
+		<button id="btnConnexion">Connexion</button>
+	</form>
+	<script type="text/javascript">
+		var socket = io.connect('http://localhost:8080');
+		$('#btnConnexion').click(function() {
+			socket.emit('request', {command : 'identify', data: {login: $('#login').val()}});
+		})
+	</script>
+</body>
+</html>

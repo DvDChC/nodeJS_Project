@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<% include header.html %>
+	<title>Administration du salon</title>
+</head>
+<body>
+	<p> Utilisateurs connectés : </p>
+	<ul>
+	<% for (var i = 0; i< users.length; i++) { %>
+		<li class="kick">
+			<%= users[i].login %>
+			<button>&times; </button>
+		</li>
+		<li id="<%= i %>">
+
+			<%= users[i].id %>
+		</li>
+		<hr>
+	<% } %>
+	</ul>
+
+	<script type="text/javascript">
+		var socket = io.connect('http://localhost:8080');
+		$(".kick").click(function() {
+			console.log($(this).next().html());
+			userId = $(this).next().html();
+			socket.emit("kick", userId);
+		});
+	</script>
+</body>
+</html>
