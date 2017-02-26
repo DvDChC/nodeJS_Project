@@ -5,17 +5,130 @@
 	<% include header.html %>
 </head>
 <body>
-	<form action="/question">
+	<form id="loginF" action="">
 		<label for="username">Nom : </label>
 		<input type="text" id="login" name="username" value="">
+		<select id="select">
+			<option value="MIAW" selected>MIAW</option>
+			<option value="SIMO">SIMO</option>
+			<option value="ASSR">ASSR</option>
+		</select>
 
-		<button id="btnConnexion">Connexion</button>
 	</form>
+
+	<button id="btnConnexion">Connexion</button>
+
 	<script type="text/javascript">
 		var socket = io.connect('http://localhost:8080');
+		var questionNumber = 0;
+		var data;
+		var connected = false;
+
+		// Connects the student and waits for the teacher to start
 		$('#btnConnexion').click(function() {
-			socket.emit('request', {command : 'identify', data: {login: $('#login').val()}});
-		})
+			if ($('#login').val() != "") {
+				console.log(socket.id);
+				socket.emit('request', {command : 'identify', data: {login: $('#login').val(), salon: $('select option:selected').text()} });
+				$('#loginF').remove();
+				$('#btnConnexion').remove();
+				$('body').append('<div class="loader"></div>');
+				connected = true;
+			}
+		});
+
+		// Called when the teacher starts
+		socket.on("starting", function(stuff) {
+			data = stuff;
+			$('.loader').remove();
+			// Makes sure the user is connected before loading the question
+			if (connected) {
+				printQuestion(data, questionNumber);
+			}
+			
+		});
+
+		// 
+		socket.on("kicked", function(users) {
+			var present = false;
+			// Go through every connected user
+			for(var i =0; i<users.length; i++) {
+				if (users[i].id == socket.id) {
+					present = true;
+				}
+			}
+			// If the actual user is not in it, he receive an alert and his page is reloaded to force him to reconnect
+			if (present == false) {
+				alert("Vous avez été expulsé !");
+				connected = false;
+				setTimeout(function() {
+					location.reload();
+				}, 1000);
+			}
+		});
+
+		// Loads the next question
+		socket.on("next", function() {
+			// Makes sure the user is connected
+			if (connected) {
+				questionNumber++;
+				printQuestion(data, questionNumber);
+			}
+			
+		});
+
+		//Reload the same question
+		socket.on("repeat", function() {
+			// Makes sure the user is connected
+			if (connected) {
+				printQuestion(data, questionNumber);
+			}
+			
+		});
+
+		var questions = [];
+		var reponses = [];
+		var rep_ques = [];
+		// Goes through questions and answers and displays it to the students
+		function printQuestion(data, n) {
+			console.log(data);
+			// Clears the display of any old question if there was one and the waiting animation
+			$('.loader').remove();
+			$('#question').remove();
+
+			// Checks if we reached the end of the exercice
+			if (n < data[0].length) {
+				for (var i =0; i <data[0].length; i++) {
+					questions.push(data[0][i]);
+				}
+				for (var i =0; i< data[1].length; i++) {
+					reponses.push(data[1][i]);
+				}
+				for (var i =0; i<data[2].length; i++) {
+					rep_ques.push(data[2][i]);
+				}
+				// Get the question from the server, which got it from the DB
+				var question = questions[n].text;
+				// Displays the question with the possible answers
+				$('body').append("<article id='question'></article");
+				$('#question').append('<h1> Question : '+question+'</h1>');
+				$('#question').append('<form class="form-radio" id="myForm"> <input type="radio" class="reponse" name="reponse" value="'+reponses[0].text+'" checked>'+reponses[0].text+'<br> <input type="radio" class="reponse" name="reponse" value="'+reponses[1].text+'" >'+reponses[1].text+'<br> <input type="radio" class="reponse" name="reponse" value="'+reponses[2].text+'" >'+reponses[2].text+' </form>');
+				$('#question').append('<button id="valider">Valider</button>');
+
+				// Send the answer of the student to the server
+				$('#valider').click(function() {
+					console.log($('.reponse:checked').val());
+					socket.emit("answer", {data: {answer: $('.reponse:checked').val(), id: socket.id, Qid: questions[n].id } });
+					// Calls back the function to get the next question
+					//printQuestion(data, n+1);
+					$('#question').remove();
+					$('body').append('<div class="loader"></div>');
+				});
+			}
+			// Displays when the exercice is finished
+			else {
+				$("body").append("<h1> QUESTIONNAIRE TERMINE </h1>");
+			}
+		}
 	</script>
 </body>
 </html>
