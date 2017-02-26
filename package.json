@@ -1,0 +1,27 @@
+{
+  "name": "projet_node_finalv2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "megapoll.js",
+  "dependencies": {
+    "ejs": "^2.5.5",
+    "express": "^4.14.0",
+    "mysql": "^2.12.0",
+    "socket.io": "^1.7.2",
+    "node-mysql": "^0.4.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/DvDChC/nodeJS_Project.git"
+  },
+  "author": "CHACATON / PEREIRA / MESSINA",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/DvDChC/nodeJS_Project/issues"
+  },
+  "homepage": "https://github.com/DvDChC/nodeJS_Project#readme"
+}
