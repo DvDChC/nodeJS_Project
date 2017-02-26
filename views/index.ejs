@@ -21,13 +21,5 @@
 			</section>
 		</a>
 	</section>
-
-	<script>
-		console.log("connecting to sockets");
-		var socket = io.connect('http://localhost:8080');
-		socket.on('info', function(message) {
-			console.log("message : "+message.text);
-		});
-	</script>
 </body>
 </html>

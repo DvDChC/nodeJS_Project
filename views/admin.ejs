@@ -5,28 +5,85 @@
 	<title>Administration du salon</title>
 </head>
 <body>
-	<p> Utilisateurs connectés : </p>
-	<ul>
-	<% for (var i = 0; i< users.length; i++) { %>
-		<li class="kick">
-			<%= users[i].login %>
-			<button>&times; </button>
-		</li>
-		<li id="<%= i %>">
 
-			<%= users[i].id %>
-		</li>
-		<hr>
-	<% } %>
+	<select id="select">
+			<option value="MIAW" selected>MIAW</option>
+			<option value="SIMO">SIMO</option>
+			<option value="ASSR">ASSR</option>
+	</select>
+
+	<p> Utilisateurs connectés dans le salon : </p>
+	<ul id="userList">
 	</ul>
+
+	<button id="start"> Commencer </button>
 
 	<script type="text/javascript">
 		var socket = io.connect('http://localhost:8080');
-		$(".kick").click(function() {
-			console.log($(this).next().html());
-			userId = $(this).next().html();
-			socket.emit("kick", userId);
+
+		// Update the list of users everytime a user connects or disconnects
+		socket.on("users", function(users){
+			$("#userList").empty();
+			for(var i =0; i<users.length; i++) {
+				$('#userList').append("<li class='"+users[i].id+" kick'>"+users[i].login+"<button>&times; </button> </li>");
+				$('#userList').append("<li class="+users[i].id+" id="+users[i].id+">"+users[i].id+"</li>");
+				$('#userList').append("<li class='"+users[i].id+" ans'></li>");
+				$('#userList').append("<hr class="+users[i].id+">");
+			}
+			// Allows the teacher to kick students
+			$(".kick").click(function() {
+				userId = $(this).next().html();
+				$('.'+userId).remove();
+				socket.emit("kick", userId);
+			});
 		});
+		// NOT USED (supposed to load the room depending on which one is chosen)
+		$("option").click(function() {
+			socket.emit("loadSalon", $(this).val());
+		});
+		
+		// Allows the teacher to start the exercice and displays options
+		$('#start').click(function() {
+			socket.emit("start");
+			$(".ans").empty();
+			$(".ans").css("background-color", "grey");
+			$("#next").remove()
+			$("#repeat").remove();
+			$("body").append("<button id='next'>Question suivante</button>");
+			$("body").append("<button id='repeat'>Répéter question</button>");
+			$("p").remove();
+			// Asks the server to load the next question to the students
+			$("#next").click(function() {
+				socket.emit("next");
+				$('#stat').removeAttr("id");
+
+			});
+			// Asks the server to reload the same question to the students
+			$("#repeat").click(function() {
+				socket.emit("repeat");
+				$('#stat').removeAttr("id");
+			});
+			//$("#start").remove();
+		});
+		var oui = 0;
+		var non = 0;
+		var pe = 0;
+		// Receive the answer from the students and displays it
+		socket.on("hasAnswered", function(data){
+			$('#'+data.data.id).next().css("background-color", "green");
+			$('#'+data.data.id).next().append(data.data.Qid + " : " + data.data.answer + "/");
+			
+			if (data.data.answer === "Oui") {
+				oui++;
+			} else if(data.data.answer === "Non") {
+				non++
+			} else if(data.data.answer === "Peut être") {
+				pe++;
+			}
+			$("#stat").remove();
+			$('body').append("<p id='stat'> Statistique de la question "+ data.data.Qid +" = Oui : "+oui+", Non : "+non+", Peut être : "+pe+"  </p>");
+		})
+
 	</script>
 </body>
 </html>
